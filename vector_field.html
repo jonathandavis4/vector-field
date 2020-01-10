@@ -1,0 +1,183 @@
+<html>
+    <head>
+        <title>
+            Vector field
+        </title>
+        <style>
+            body {
+                background-color: #ccc;
+                text-align: center;
+            }
+
+            canvas {
+                background-color: #fff;
+                margin-top: 40px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas width="1400" height="600"></canvas>
+        <script>
+            function random(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function random_vector() {
+                return {
+                    'angle': random(0, 359) * Math.PI / 180,
+                    'magnitude': random(0, 20)
+                }
+            }
+
+            var canvas = document.querySelector('canvas');
+            var width = canvas.width;
+            var height = canvas.height;
+            var context = canvas.getContext('2d');
+
+            var field_density = 100;
+            var vector_field = new Array(width / field_density);
+            for (var i = 0; i < vector_field.length; i++) {
+                vector_field[i] = new Array(height / field_density);
+                for (var j = 0; j < vector_field[i].length; j++) {
+                    vector_field[i][j] = random_vector();
+                }
+            }
+
+            function draw_vector_grid() {
+                context.strokeStyle = '#ccc';
+                context.lineWidth = 2;
+                for (var i = 0; i < vector_field.length; i++) {
+                    for (var j = 0; j < vector_field[i].length; j++) {
+                        context.beginPath();
+                        context.moveTo(
+                            0,
+                            j * field_density
+                        );
+                        context.lineTo(
+                            width,
+                            j * field_density
+                        );
+                        context.stroke();
+                    }
+
+                    context.beginPath();
+                    context.moveTo(
+                        i * field_density,
+                        0
+                    );
+                    context.lineTo(
+                        i * field_density,
+                        height
+                    );
+                    context.stroke();
+                }
+            }
+
+            function draw_vector_field() {
+                context.strokeStyle = '#ccc';
+                context.fillStyle = '#ccc';
+                context.lineWidth = 1;
+                for (var i = 0; i < vector_field.length; i++) {
+                    for (var j = 0; j < vector_field[i].length; j++) {
+                        var vector = vector_field[i][j]
+
+                        // Draw the vector start point.
+                        context.beginPath();
+                        context.arc(
+                            (i * field_density) + (field_density / 2),
+                            (j * field_density) + (field_density / 2),
+                            2,
+                            0,
+                            2 * Math.PI
+                        );
+                        context.fill();
+
+                        // Draw the vector.
+                        context.beginPath();
+                        context.moveTo(
+                            (i * field_density) + (field_density / 2),
+                            (j * field_density) + (field_density / 2)
+                        );
+                        context.lineTo(
+                            (i * field_density) + (field_density / 2) + (vector.magnitude * Math.cos(vector.angle)),
+                            (j * field_density) + (field_density / 2) + (vector.magnitude * Math.sin(vector.angle))
+                        );
+                        context.stroke();
+                    }
+                }
+            }
+
+            function random_0_to_f() {
+                var chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+                return chars[Math.floor(Math.random() * chars.length)]
+            }
+
+            function random_color() {
+                return '#' + random_0_to_f() + random_0_to_f() + random_0_to_f();
+            }
+
+            var ball_count = 1;
+            var balls = [];
+            for (var i = 0; i < ball_count; i++) {
+                balls.push({
+                    x: random(0, width),
+                    y: random(0, height),
+                    x_velocity: 0,
+                    y_velocity: 0,
+                    color: random_color()
+                });
+            }
+
+            function draw_balls() {
+                for (var i = 0; i < ball_count; i++) {
+                    var ball = balls[i];
+                    context.fillStyle = ball.color;
+                    context.beginPath();
+                    context.arc(
+                        ball.x,
+                        ball.y,
+                        10,
+                        0,
+                        2 * Math.PI
+                    );
+                    context.fill();
+                }
+            }
+
+            function run() {
+                context.fillStyle = '#fff';
+                context.fillRect(0, 0, width, height);
+
+                for (var i = 0; i < ball_count; i++) {
+                    var ball = balls[i];
+
+                    var current_vector = vector_field[Math.floor(ball.x / field_density)][Math.floor(ball.y / field_density)];
+                    ball.x_velocity += current_vector.magnitude * Math.cos(current_vector.angle);
+                    ball.y_velocity += current_vector.magnitude * Math.sin(current_vector.angle);
+                    
+                    ball.x += ball.x_velocity * 0.01;
+                    ball.y += ball.y_velocity * 0.01;
+
+                    if (ball.x < 0) {
+                        ball.x = width + ball.x;
+                    }
+                    if (ball.x > width) {
+                        ball.x = 0 + ball.x - width;
+                    }
+                    if (ball.y < 0) {
+                        ball.y = height + ball.y;
+                    }
+                    if (ball.y > height) {
+                        ball.y = 0 + ball.y - height;
+                    }
+                }
+
+                draw_vector_grid();
+                draw_vector_field();
+                draw_balls();
+            }
+
+            setInterval(run, 50);
+        </script>
+    </body>
+</html>
